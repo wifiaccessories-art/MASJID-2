@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Masjid TV Display</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #061322;
+      color: #fff7dd;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(255, 214, 112, 0.16), transparent 26%),
+        linear-gradient(135deg, #061120 0%, #092139 52%, #030812 100%);
+    }
+
+    .screen {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      gap: 8px;
+    }
+
+    .top-bar {
+      height: 92px;
+      min-height: 92px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 8px;
+    }
+
+    .clock-panel,
+    .message-panel,
+    .content-panel {
+      background: rgba(0, 0, 0, 0.32);
+      border: 2px solid rgba(255, 214, 112, 0.35);
+      border-radius: 24px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    }
+
+    .clock-panel {
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .clock-time {
+      color: #ffd670;
+      font-size: clamp(28px, 2.55vw, 48px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      max-width: 100%;
+    }
+
+    .message-panel {
+      padding: 8px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .header-message {
+      width: 100%;
+      text-align: center;
+      color: #fff7dd;
+      font-size: clamp(26px, 2.7vw, 52px);
+      font-weight: 900;
+      line-height: 1.12;
+      white-space: normal;
+      overflow-wrap: break-word;
+      text-shadow: 0 4px 15px rgba(0, 0, 0, 0.55);
+      animation: fadeMessage 0.55s ease;
+    }
+
+    @keyframes fadeMessage {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .content-panel {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+      padding: 0;
+      background: #000;
+    }
+
+    .slide-wrap {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 20px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeSlide 0.55s ease;
+    }
+
+    @keyframes fadeSlide {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .media-slide {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .media-slide img,
+    .media-slide video {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: none !important;
+      max-height: none !important;
+      display: block;
+      object-fit: fill !important;
+      object-position: center center;
+      background: #000;
+    }
+
+    .text-slide {
+      width: 100%;
+      height: 100%;
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background:
+        radial-gradient(circle at top left, rgba(255, 214, 112, 0.18), transparent 35%),
+        linear-gradient(135deg, #071120, #0b263d);
+    }
+
+    .text-slide h2 {
+      margin: 0 0 26px;
+      color: #ffd670;
+      font-size: clamp(42px, 4vw, 82px);
+      line-height: 1.08;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .text-slide p {
+      margin: 0;
+      color: #fff7dd;
+      font-size: clamp(34px, 3.2vw, 66px);
+      line-height: 1.2;
+      font-weight: 800;
+      white-space: pre-line;
+      max-width: 94%;
+    }
+
+    .status {
+      position: absolute;
+      right: 18px;
+      bottom: 12px;
+      z-index: 5;
+      padding: 4px 10px;
+      border-radius: 12px;
+      color: #fff7dd;
+      background: rgba(0, 0, 0, 0.42);
+      font-size: 24px;
+      font-weight: 900;
+      text-shadow: 0 3px 8px rgba(0, 0, 0, 0.80);
+    }
+
+    .error-box {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #fff7dd;
+      font-size: 34px;
+      font-weight: 800;
+      line-height: 1.35;
+      padding: 30px;
+      background: #000;
+    }
+
+    @media (max-width: 900px) {
+      .screen {
+        padding: 6px;
+        gap: 6px;
+      }
+
+      .top-bar {
+        grid-template-columns: 170px 1fr;
+        height: 74px;
+        min-height: 74px;
+      }
+
+      .clock-time {
+        font-size: 28px;
+      }
+
+      .header-message {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="screen">
+    <section class="top-bar">
+      <div class="clock-panel">
+        <div class="clock-time" id="clockTime">--:-- --</div>
+      </div>
+
+      <div class="message-panel">
+        <div class="header-message" id="headerMessage">Loading messages...</div>
+      </div>
+    </section>
+
+    <section class="content-panel">
+      <div class="slide-wrap" id="slideWrap">
+        <div class="error-box">Loading content...</div>
+      </div>
+      <div class="status" id="statusText"></div>
+    </section>
+  </main>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUjzb_WJuFHGtblK_pzTH4vs_ZitgvMtxKY-sgc_tUEO5toVK8xrKd0L0L6hrwdZr5/exec';
+
+    let settings = {
+      header_message_duration_seconds: 15,
+      refresh_seconds: 300,
+      timezone: 'America/Toronto'
+    };
+
+    let headerMessages = [];
+    let slides = [];
+    let headerIndex = 0;
+    let slideIndex = 0;
+    let headerTimer = null;
+    let slideTimer = null;
+    let refreshTimer = null;
+
+    function formatClock(date, timeZone) {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone || 'America/Toronto',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }).formatToParts(date);
+
+      const hour = parts.find(p => p.type === 'hour')?.value || '--';
+      const minute = parts.find(p => p.type === 'minute')?.value || '--';
+      const dayPeriod = (parts.find(p => p.type === 'dayPeriod')?.value || '').toUpperCase();
+
+      return hour.padStart(2, '0') + ':' + minute + ' ' + dayPeriod;
+    }
+
+    function updateClock() {
+      document.getElementById('clockTime').textContent = formatClock(new Date(), settings.timezone);
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function escapeHTML(value) {
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function convertDriveImageUrl(url) {
+      if (!url) return '';
+      const clean = String(url).trim();
+      const match = clean.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+      if (match && match[1]) {
+        return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w1920';
+      }
+      return clean;
+    }
+
+    function convertGitHubBlobToRaw(url) {
+      if (!url) return '';
+      let clean = String(url).trim();
+      if (clean.includes('github.com') && clean.includes('/blob/')) {
+        clean = clean.replace('https://github.com/', 'https://raw.githubusercontent.com/').replace('/blob/', '/');
+      }
+      return clean;
+    }
+
+    function normalizeMediaUrl(url, type) {
+      let clean = convertGitHubBlobToRaw(url);
+      if (type === 'image') clean = convertDriveImageUrl(clean);
+      return clean;
+    }
+
+    function loadData() {
+      const callbackName = 'masjidTvCallback_' + Date.now();
+
+      window[callbackName] = function(data) {
+        try {
+          settings = Object.assign(settings, data.settings || {});
+          updateClock();
+
+          headerMessages = Array.isArray(data.headerMessages) && data.headerMessages.length
+            ? data.headerMessages
+            : [{ message: 'WELCOME TO MASJID PEACE NIAGARA FALLS', durationSeconds: 15 }];
+
+          slides = Array.isArray(data.slides) && data.slides.length
+            ? data.slides
+            : [{ type: 'text', title: 'Announcement', message: 'Welcome to Masjid Peace Niagara Falls', durationSeconds: 20 }];
+
+          headerIndex = 0;
+          slideIndex = 0;
+
+          showHeaderMessage();
+          showSlide();
+
+          clearTimeout(refreshTimer);
+          refreshTimer = setTimeout(loadData, Number(settings.refresh_seconds || 300) * 1000);
+        } finally {
+          delete window[callbackName];
+          const scriptTag = document.getElementById(callbackName);
+          if (scriptTag) scriptTag.remove();
+        }
+      };
+
+      const script = document.createElement('script');
+      script.id = callbackName;
+      script.src = APPS_SCRIPT_URL + '?callback=' + callbackName + '&t=' + Date.now();
+      script.onerror = function() {
+        document.getElementById('slideWrap').innerHTML = '<div class="error-box">Unable to load Google Sheet data.<br>Please check your Apps Script Web App URL.</div>';
+      };
+      document.body.appendChild(script);
+    }
+
+    function showHeaderMessage() {
+      clearTimeout(headerTimer);
+      if (!headerMessages.length) return;
+
+      const item = headerMessages[headerIndex];
+      const header = document.getElementById('headerMessage');
+      header.innerHTML = escapeHTML(item.message || '');
+      header.style.animation = 'none';
+      void header.offsetHeight;
+      header.style.animation = '';
+
+      const durationSeconds = Number(item.durationSeconds || settings.header_message_duration_seconds || 15);
+      headerTimer = setTimeout(function() {
+        headerIndex = (headerIndex + 1) % headerMessages.length;
+        showHeaderMessage();
+      }, durationSeconds * 1000);
+    }
+
+    function showSlide() {
+      clearTimeout(slideTimer);
+      if (!slides.length) return;
+
+      const slideWrap = document.getElementById('slideWrap');
+      const status = document.getElementById('statusText');
+      const slide = slides[slideIndex];
+      const type = String(slide.type || 'text').toLowerCase().trim();
+      const durationSeconds = Number(slide.durationSeconds || 20);
+      const mediaUrl = normalizeMediaUrl(slide.mediaUrl || '', type);
+
+      status.textContent = (slideIndex + 1) + ' / ' + slides.length;
+
+      slideWrap.style.animation = 'none';
+      void slideWrap.offsetHeight;
+      slideWrap.style.animation = '';
+
+      if (type === 'image') {
+        slideWrap.innerHTML = '<div class="media-slide"><img src="' + escapeHTML(mediaUrl) + '" alt="Masjid announcement image"></div>';
+        slideTimer = setTimeout(nextSlide, durationSeconds * 1000);
+        return;
+      }
+
+      if (type === 'video') {
+        slideWrap.innerHTML = '<div class="media-slide"><video id="contentVideo" src="' + escapeHTML(mediaUrl) + '" autoplay muted playsinline></video></div>';
+        const video = document.getElementById('contentVideo');
+        if (video) {
+          video.loop = true;
+          video.onerror = function() {
+            slideWrap.innerHTML = '<div class="error-box">Video could not load.<br>Please use a public direct MP4 link.</div>';
+          };
+          video.play().catch(function() {});
+        }
+        slideTimer = setTimeout(nextSlide, durationSeconds * 1000);
+        return;
+      }
+
+      slideWrap.innerHTML =
+        '<div class="text-slide">' +
+          '<h2>' + escapeHTML(slide.title || 'Announcement') + '</h2>' +
+          '<p>' + escapeHTML(slide.message || '') + '</p>' +
+        '</div>';
+      slideTimer = setTimeout(nextSlide, durationSeconds * 1000);
+    }
+
+    function nextSlide() {
+      slideIndex = (slideIndex + 1) % slides.length;
+      showSlide();
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
